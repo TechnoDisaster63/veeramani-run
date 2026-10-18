@@ -388,10 +388,11 @@ function draw(){
   // Veeramani speech bubble
   if(bubbles.length && state===ST.PLAY){
     const b=bubbles[bubbles.length-1];
-    const bx=px()+30*S, by=(player?player.y:GROUND)-210*S;
+    const by=(player?player.y:GROUND)-210*S;
     ctx.font='bold 15px '+HUD_F;
     const tw=ctx.measureText(b.txt).width;
     const bw2=tw+28, bh2=32;
+    const bx=Math.max(8, Math.min(px()+30*S, W-bw2-18));
     ctx.globalAlpha=Math.min(1,b.life*2.5);
     ctx.fillStyle='rgba(255,255,255,0.95)';
     ctx.strokeStyle='rgba(20,26,34,0.25)'; ctx.lineWidth=1.5;
@@ -421,11 +422,13 @@ function draw(){
   if(state===ST.PLAY && hidden){
     ctx.textAlign='center';
     ctx.font='bold 15px '+HUD_F;
-    const t='\uD83D\uDE8C Bus cover - kandupidikka mudiyadhu';
+    const narrow=W<520;
+    const t=narrow?'\uD83D\uDE8C Bus cover!':'\uD83D\uDE8C Bus cover - kandupidikka mudiyadhu';
     const tw=ctx.measureText(t).width;
+    const py=narrow?54:14;
     ctx.fillStyle='rgba(20,26,34,0.55)';
-    ctx.beginPath(); ctx.roundRect(W/2-tw/2-14, 14, tw+28, 32, 16); ctx.fill();
-    ctx.fillStyle='#b7f0c0'; ctx.fillText(t, W/2, 35);
+    ctx.beginPath(); ctx.roundRect(W/2-tw/2-14, py, tw+28, 32, 16); ctx.fill();
+    ctx.fillStyle='#b7f0c0'; ctx.fillText(t, W/2, py+21);
   }
 
   if(state===ST.MENU) drawMenu();
