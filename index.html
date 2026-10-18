@@ -49,6 +49,22 @@ headImg.onload=()=>{headReady=true;};
 headImg.src = 'data:image/png;base64,'+HEAD_B64;
 const meme = new Audio('audio.mp3'); meme.preload='auto';
 const meme2 = new Audio('audio2.mp3'); meme2.preload='auto';
+/* single-channel voice manager: only one voice note can play at a time.
+   playVoice(a, cut) - cut=true stops whatever is playing first (catch line wins);
+   cut=false only starts when the channel is idle (milestone replays). */
+let voiceCur = null;
+function stopVoice(){
+  if(voiceCur){ try{ voiceCur.pause(); voiceCur.currentTime=0; }catch(e){} }
+  voiceCur=null;
+}
+function playVoice(a, cut){
+  if(muted) return;
+  if(voiceCur && !voiceCur.paused && !voiceCur.ended){
+    if(!cut) return;             // busy: idle-only request dropped, no overlap
+    stopVoice();                 // priority request cuts the current one
+  }
+  try{ a.currentTime=0; a.play().catch(()=>{}); voiceCur=a; }catch(e){}
+}
 let muted=false;
 const muteBtn=document.getElementById('muteBtn');
 muteBtn.addEventListener('click',(e)=>{e.stopPropagation();muted=!muted;meme.muted=muted;meme2.muted=muted;muteBtn.innerHTML=muted?'&#128263;':'&#128266';});
@@ -118,13 +134,13 @@ const HIT_GAGS={
 
 function startGame(){
   reset(); state=ST.PLAY;
-  say('Odi, odi! \uD83C\uDFC3');
-  if(!muted){ try{ meme.currentTime=0; meme.play().catch(()=>{}); }catch(e){} }
+  say('Odu, odu! \uD83C\uDFC3');
+  playVoice(meme, true);
 }
 function gameOver(){
   state=ST.OVER;
-  try{ meme.pause(); }catch(e){}
-  if(!muted){ try{ meme2.currentTime=0; meme2.play().catch(()=>{}); }catch(e){} }
+  stopVoice();
+  playVoice(meme2, true);
   if(dist>best){best=Math.floor(dist);localStorage.setItem('vmrun_best',best);}
   beep(140,0.5,'sawtooth',0.12); beep(90,0.8,'sawtooth',0.10);
 }
@@ -140,7 +156,10 @@ let overT=0;
 window.addEventListener('touchstart',(e)=>{e.preventDefault();press();},{passive:false});
 window.addEventListener('mousedown',(e)=>{if(e.target!==muteBtn)press();});
 window.addEventListener('keydown',(e)=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();press();}});
-document.addEventListener('visibilitychange',()=>{ if(document.hidden && !muted) meme.pause(); else if(state===ST.PLAY && !muted) meme.play().catch(()=>{}); });
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ if(voiceCur && !voiceCur.paused){ voiceCur.pause(); voiceCur._wasPlaying=true; } }
+  else if(voiceCur && voiceCur._wasPlaying && !muted){ voiceCur._wasPlaying=false; voiceCur.play().catch(()=>{}); }
+});
 
 /* ---------- spawning ---------- */
 function spawnObstacle(){
@@ -229,7 +248,7 @@ function update(dt){
   // chaser count milestones + meme replay
   const want = 1+Math.min(3,Math.floor(dist/600));
   if(want>chaserCount){ chaserCount=want; addFloat('More COD agents joined! \uD83D\uDE31', W*0.5, H*0.3,'#ff5252',true); beep(200,0.3,'sawtooth',0.1); }
-  if(dist>milestone){ milestone+=500; if(!muted && meme.paused){ try{meme.currentTime=0;meme.play().catch(()=>{});}catch(e){} } }
+  if(dist>milestone){ milestone+=500; playVoice(meme, false); }
 
   // spawns
   spawnT-=dt; if(spawnT<=0){ spawnObstacle(); spawnT = Math.max(0.6, 1.55 - speed/700) * (0.85+Math.random()*0.5); }
@@ -617,7 +636,7 @@ function drawBus(b){
   // number plate
   ctx.fillStyle='#fff'; ctx.fillRect(x+10*u,y+b.h-48*u,52*u,14*u);
   ctx.fillStyle='#111'; ctx.font='bold '+Math.round(9*u)+'px '+HUD_F;
-  ctx.fillText('TN 63 ODI', x+36*u, y+b.h-37*u);
+  ctx.fillText('TN 63 ODU', x+36*u, y+b.h-37*u);
   // door
   ctx.strokeStyle='rgba(20,26,34,0.35)'; ctx.lineWidth=2;
   ctx.strokeRect(x+8*u,y+20*u,26*u,b.h-72*u);
