@@ -1267,7 +1267,10 @@ function drawMenu(){
   ctx.textAlign='center';
   const cx=W/2;
   uiBtns=[];
-  ctx.font='bold '+Math.round(42*S)+'px '+GAG_F;
+  let tSize=Math.round(42*S);
+  ctx.font='bold '+tSize+'px '+GAG_F;
+  const twT=ctx.measureText('VEERAMANI RUN').width;
+  if(twT>W-20){ tSize=Math.max(18,Math.floor(tSize*(W-20)/twT)); ctx.font='bold '+tSize+'px '+GAG_F; }
   ctx.lineWidth=8; ctx.strokeStyle='rgba(0,0,0,0.85)';
   ctx.strokeText('VEERAMANI RUN', cx, H*0.13);
   const grad=ctx.createLinearGradient(0,H*0.09,0,H*0.15);
